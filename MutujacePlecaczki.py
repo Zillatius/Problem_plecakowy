@@ -1,7 +1,4 @@
-import random, math
-
-#inicjalizacja generatora liczb losowych
-random.seed(a=None)
+import random, math, matplotlib.pyplot as plt
 
 class Sack:
     def __init__(self, geneAmt, sackSize):
@@ -16,8 +13,9 @@ class Sack:
     def mutate(self):
         # szansa na mutację losowego genu do losowej wartości
         for x in range(len(self.geneVals)):
-            if random.random() < 0.001+0.005*bestCount:
-                self.geneVals[x] = random.random()
+            if random.random() < 0.001+0.002*(bestCount if bestCount<20 else 20):
+                self.geneVals[x] += 0.5-random.random()
+                self.geneVals[x] %= 1
 
     def calcFitness(self, geneWorth, geneSize):
         #liczenie przystosowania
@@ -45,8 +43,12 @@ class Population:
 
     def popFitness(self,geneWorth,geneSize):
         #liczenie przystosowania i sortowanie
+        global avgFit
+        avgFit = 0;
         for spec in self.specimens:
             spec.calcFitness(geneWorth,geneSize)
+            avgFit += spec.fitness
+        avgFit = avgFit/1000
         self.specimens.sort(key=lambda x: x.fitness, reverse=True)
         return self.specimens[0].fitness
     
@@ -81,7 +83,8 @@ def LoadData(fileName):
 
 def mateSpecimens(spec1,spec2):
     #wyznaczenie miejsca krzyżowania
-    crossPoint = random.randint(0, len(spec1.geneVals))
+    
+    crossPoint = gGenomeSize/2+random.randint(-gGenomeSize/4,gGenomeSize)
     #inicjalizacja dzieci
     child1 = Sack(len(spec1.geneVals), spec1.size)
     child2 = Sack(len(spec1.geneVals), spec1.size)
@@ -99,37 +102,57 @@ def mateSpecimens(spec1,spec2):
     child1.mutate()
     child2.mutate()
     return [child1,child2]
-    
+
+#inicjalizacja generatora liczb losowych
+global bestCount
+global avgFit
+global medFit
+global gPopulSize
+avgFit = 0
+medFit = 0
+random.seed(a=None)
 
 #ladowanie danych
 params = LoadData("knapsack data large.txt")
-
 gWorth = params[1]
 gSize = params[2]
 gSackSize = params[0]
+
 gPopulSize = 1000
 gGenomeSize = len(gWorth)
+#licznik generacji
 genCount = 0
+
+#licznik stabilizacji
+bestCount = 0
+
 #stworzenie populacji
 popul = Population(gPopulSize,gGenomeSize,gSackSize)
 #inicjalizacja przystosowania
-bestfit = popul.popFitness(gWorth,gSize)
-newfit = 0
-print(bestfit)
-#licznik stabilizacji
-global bestCount
-bestCount = 0
+bestFit = popul.popFitness(gWorth,gSize)
+newFit = bestFit
+plotx = [genCount]
+ploty = []
+ploty.append([bestFit])
+ploty.append([avgFit])
+print(bestFit)
 #tworzenie kolejnych generacji póki wartość nie ustablizuje się na 150 generacji
-while bestCount < 100:
+while bestCount < 50:
     genCount += 1
     popul.crossover()
-    newfit = popul.popFitness(gWorth,gSize)
-    if newfit==bestfit:
+    newFit = popul.popFitness(gWorth,gSize)
+    if newFit-bestFit<0.00001:
         bestCount += 1
     else:
-        bestfit = newfit
-        print(bestfit)
+        bestFit = newFit
+        print(bestFit)
         bestCount = 0
+    plotx.append(genCount)
+    ploty[0].append(bestFit)
+    ploty[1].append(avgFit)
+    plt.plot(plotx,ploty[0],'r',plotx,ploty[1],'g')
+    plt.pause(0.05)
+    
 print(genCount)
 
 
