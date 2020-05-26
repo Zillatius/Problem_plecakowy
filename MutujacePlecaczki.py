@@ -28,7 +28,7 @@ class Sack:
                 #sumowanie wartości elementów do wypelnienia plecaka
                 i = int(x[0])
                 self.curSize += geneSize[i]
-                if self.curSize < self.size:
+                if self.curSize <= self.size:
                     self.fitness += geneWorth[i]
                 else:
                     return True
@@ -143,7 +143,7 @@ ploty.append([gBestFit])
 ploty.append([gAvgFit])
 
 #tworzenie kolejnych generacji póki wartość nie ustablizuje się na 50 generacji
-while bestCount < 50:
+while bestCount < 100:
     genCount += 1
     popul.crossover()
     newFit = popul.popFitness(gWorth,gSize)
