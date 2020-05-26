@@ -13,9 +13,9 @@ class Sack:
     def mutate(self):
         # szansa na mutację losowego genu do losowej wartości
         for x in range(len(self.geneVals)):
-            if random.random() < 0.001+0.002*(bestCount if bestCount<20 else 20):
-                self.geneVals[x] += 0.5-random.random()
-                self.geneVals[x] %= 1
+            #1 do 6% na od 0 do 20 generacji bez poprawy
+            if random.random() < 0.01+0.0025*(bestCount if bestCount<20 else 20):
+                self.geneVals[x] = random.random()
 
     def calcFitness(self, geneWorth, geneSize):
         #liczenie przystosowania
@@ -104,13 +104,12 @@ def mateSpecimens(spec1,spec2):
     return [child1,child2]
 
 #inicjalizacja generatora liczb losowych
+random.seed(a=None)
 global bestCount
 global avgFit
-global medFit
 global gPopulSize
 avgFit = 0
-medFit = 0
-random.seed(a=None)
+
 
 #ladowanie danych
 params = LoadData("knapsack data large.txt")
@@ -141,7 +140,7 @@ while bestCount < 50:
     genCount += 1
     popul.crossover()
     newFit = popul.popFitness(gWorth,gSize)
-    if newFit-bestFit<0.00001:
+    if newFit <= bestFit:
         bestCount += 1
     else:
         bestFit = newFit
