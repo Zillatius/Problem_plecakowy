@@ -3,35 +3,33 @@ import random, math, matplotlib.pyplot as plt
 class Sack:
     def __init__(self, geneAmt, sackSize):
         #inicjalizacja osobnika
-        self.geneVals = {}
+        self.geneVals = []
         self.size = sackSize
         self.fitness = 0
         #ustawienie genów na losowe wartości
         for i in range(geneAmt):
-            self.geneVals.update({i : random.random()})
+            self.geneVals.append(1 if random.random()>0.5 else 0)
 
     def mutate(self):
-        # szansa na mutację losowego genu do losowej wartości
-        for x in range(len(self.geneVals)):
+        # szansa na mutację losowego genu
+        for x in range(gGenomeSize):
             #1 do 6% na od 0 do 20 generacji bez poprawy
-            if random.random() < 0.02+0.0025*(bestCount if bestCount<20 else 20):
-                self.geneVals[x] = random.random()
+            if random.random() < 0.01+0.001*(bestCount if bestCount<50 else 50):
+                self.geneVals[x] = 0 if self.geneVals[x]==1 else 1
 
     def calcFitness(self, geneWorth, geneSize):
         #liczenie przystosowania
         if self.fitness == 0:
             self.fitness = 0
             self.curSize = 0
-            #sortowanie genów według wartości
-            self.sortedVals = sorted(self.geneVals.items(), key=lambda x: x[1])
-            for x in self.sortedVals:
+            for i in range(gGenomeSize):
                 #sumowanie wartości elementów do wypelnienia plecaka
-                i = int(x[0])
-                self.curSize += geneSize[i]
-                if self.curSize <= self.size:
+                if self.geneVals[i]:
+                    self.curSize += geneSize[i]
                     self.fitness += geneWorth[i]
-                else:
-                    return True
+            if self.curSize > self.size:
+                self.fitness *= 0.3
+
 
 class Population:
     def __init__(self, size, geneAmt, sackSize):
@@ -55,8 +53,11 @@ class Population:
     def crossover(self):
         #krzyżowanie top 50% populacji
         children = []
-        for x in range(0, int(self.size/3), 2):
-            pair = mateSpecimens(self.specimens[math.floor(x*random.random())], self.specimens[math.floor(x*random.random())])
+        for x in range(0, int(self.size/2), 2):
+            pair = mateSpecimens(self.specimens[math.floor(x*random.random())],
+                self.specimens[math.floor(x*random.random())]
+                )
+            #pair = mateSpecimens(self.specimens[x],self.specimens[x+1])
             children.append(pair[0])
             children.append(pair[1])
             #usunięcie 2 najgorszych osobników
@@ -87,20 +88,19 @@ def mateSpecimens(spec1,spec2):
     crossPoint = gGenomeSize/2+random.randint(-gGenomeSize/4,gGenomeSize)
 
     #inicjalizacja dzieci
-    child1 = Sack(len(spec1.geneVals), spec1.size)
-    child2 = Sack(len(spec1.geneVals), spec1.size)
-    child1.geneVals={}
-    child2.geneVals={}
+    child1 = Sack(gGenomeSize, spec1.size)
+    child2 = Sack(gGenomeSize, spec1.size)
+    child1.geneVals=[]
+    child2.geneVals=[]
 
     #wstawienie genów rodziców do dzieci
-    for x in range(len(spec1.geneVals)):
+    for x in range(gGenomeSize):
         if x < crossPoint:
-            child1.geneVals.update({x : spec1.geneVals[x]})
-            child2.geneVals.update({x : spec2.geneVals[x]})
+            child1.geneVals.append(spec1.geneVals[x])
+            child2.geneVals.append(spec2.geneVals[x])
         else:
-            child1.geneVals.update({x : spec2.geneVals[x]})
-            child2.geneVals.update({x : spec1.geneVals[x]})
-
+            child1.geneVals.append(spec2.geneVals[x])
+            child2.geneVals.append(spec1.geneVals[x])
     #mutacja potomków
     child1.mutate()
     child2.mutate()
@@ -112,15 +112,16 @@ random.seed(a=None)
 global bestCount
 global gAvgFit
 global gPopulSize
+global gGenomeSize
 gAvgFit = 0
 
 #ladowanie danych
-params = LoadData("knapsack data.txt")
+params = LoadData("knapsack data large.txt")
 gWorth = params[1]
 gSize = params[2]
 gSackSize = params[0]
 #rozmiar populacji
-gPopulSize = 1000
+gPopulSize = 1500
 gGenomeSize = len(gWorth)
 
 #licznik generacji
