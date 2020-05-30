@@ -14,9 +14,8 @@ class Sack:
         # szansa na mutację losowego genu
         for x in range(gGenomeSize):
             #1 do 6% na od 0 do 20 generacji bez poprawy
-            if random.random() < 0.01+0.001*(bestCount if bestCount<50 else 50):
-                self.geneVals[x] = 0 if self.geneVals[x]==1 else 1
-
+            if random.random() < 0.01+0.002*(bestCount if bestCount<20 else 20):
+                self.geneVals[x] = 0 if self.geneVals[x] else 1
     def calcFitness(self, geneWorth, geneSize):
         #liczenie przystosowania
         if self.fitness == 0:
@@ -28,7 +27,7 @@ class Sack:
                     self.curSize += geneSize[i]
                     self.fitness += geneWorth[i]
             if self.curSize > self.size:
-                self.fitness *= 0.3
+                self.fitness *= 0.1
 
 
 class Population:
@@ -54,10 +53,10 @@ class Population:
         #krzyżowanie top 50% populacji
         children = []
         for x in range(0, int(self.size/2), 2):
-            pair = mateSpecimens(self.specimens[math.floor(x*random.random())],
+            pair = mateSpecimens(
+                self.specimens[math.floor(x*random.random())],
                 self.specimens[math.floor(x*random.random())]
                 )
-            #pair = mateSpecimens(self.specimens[x],self.specimens[x+1])
             children.append(pair[0])
             children.append(pair[1])
             #usunięcie 2 najgorszych osobników
@@ -121,7 +120,7 @@ gWorth = params[1]
 gSize = params[2]
 gSackSize = params[0]
 #rozmiar populacji
-gPopulSize = 1500
+gPopulSize = 2500
 gGenomeSize = len(gWorth)
 
 #licznik generacji
@@ -165,4 +164,4 @@ print(genCount)
 print("Najlepszy wynik")
 print(gBestFit)
 print("Wciśnij enter by kontynuować...")
-input()
+#input()
